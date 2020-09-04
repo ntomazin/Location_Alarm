@@ -15,7 +15,8 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   Completer<GoogleMapController> _controller = Completer();
 
-  static LatLng _initialPosition = LatLng(45.521563, -122.677433);
+  static LatLng _initialPosition = LatLng(0,0);
+  static LatLng _currentLocation = LatLng(0,0);
   final Set<Marker> _markers = {};
 
 
@@ -24,26 +25,30 @@ class _MyAppState extends State<MyApp> {
     super.initState();
     _getLocation();
   }
-  /*
-    GeolocatorPlatform().getCurrentPosition().then((currloc){
-      setState((){
-        _initialPosition = currloc;0
-      });
-    });
+
+   void _init_location(){
+     mapController.animateCamera(
+       CameraUpdate.newCameraPosition(
+         CameraPosition(
+             target: _currentLocation, zoom: 7.0),
+       ),
+     );
   }
- */
 
   void _getLocation() async {
     Position position =
     await getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
     setState(() {
-      _initialPosition = LatLng(position.latitude, position.longitude);
+      _currentLocation = LatLng(position.latitude.toDouble(),
+          position.longitude.toDouble());
     });
+    print(_currentLocation.toString());
   }
-
 
   void _onMapCreated(GoogleMapController controller) {
     _controller.complete(controller);
+    mapController = controller;
+    _init_location();
   }
 
   void _onMapTypeButtonPressed() {
@@ -56,6 +61,8 @@ class _MyAppState extends State<MyApp> {
 
   MapType _currentMapType = MapType.normal;
   LatLng _lastMapPosition = _initialPosition;
+  GoogleMapController mapController;
+
 
   void _onCameraMove(CameraPosition position) {
     _lastMapPosition = position.target;
@@ -81,7 +88,7 @@ class _MyAppState extends State<MyApp> {
     return MaterialApp(
       home: Scaffold(
         appBar: AppBar(
-          title: Text('Maps Sample App'),
+          title: Text('Location alarm'),
           backgroundColor: Colors.green[700],
         ),
         body: Stack(
@@ -97,22 +104,24 @@ class _MyAppState extends State<MyApp> {
               ),
             ),
             Padding(
-                padding: const EdgeInsets.all(16.0),
+                padding: const EdgeInsets.all(0),
                 child: Align(
                   child: Column(children: <Widget>[
                     FloatingActionButton(
                       onPressed: _onMapTypeButtonPressed,
                       materialTapTargetSize: MaterialTapTargetSize.padded,
-                      backgroundColor: Colors.green,
+                      backgroundColor: Colors.blueGrey,
                       child: const Icon(Icons.map, size: 36.0),
                     ),
                     SizedBox(height: 16.0),
                     FloatingActionButton(
                       onPressed: _onAddMarkerButtonPressed,
                       materialTapTargetSize: MaterialTapTargetSize.padded,
-                      backgroundColor: Colors.green,
+                      backgroundColor: Colors.blueGrey,
                       child: const Icon(Icons.add_location, size: 36.0),
                     ),
+                    FloatingActionButton(onPressed: _init_location,
+                      child: const Icon(Icons.location_on, size: 36.0),),
                   ]),
                 )),
           ],
